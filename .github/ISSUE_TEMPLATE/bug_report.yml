@@ -1,0 +1,87 @@
+name: Bug report
+description: Something in Spinet for PC isn't working
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. The more of this you fill in, the quicker it can be fixed.
+        Problems with the Android app go in [Spinet-Mobile](https://github.com/Kevcar98/Spinet-Mobile/issues), and problems with the server in [Spinet-Server](https://github.com/Kevcar98/Spinet-Server/issues).
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the problem in a sentence or two.
+      placeholder: Songs from my server skip straight to the next one without playing.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to make it happen
+      description: What did you do just before it happened?
+      placeholder: |
+        1. Open Library
+        2. Open a playlist from my server
+        3. Press play on any song
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Spinet version
+      description: Shown under Settings > Updates.
+      placeholder: "0.0.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is Spinet installed?
+      options:
+        - Installer (.msi)
+        - Portable (.zip)
+        - Built from source
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system
+      description: For Windows, Settings > System > About shows the edition and version.
+      placeholder: Windows 11 Pro 25H2
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Where was the music coming from?
+      multiple: true
+      options:
+        - Files on this PC
+        - My own server
+        - An extension
+        - Not about playback
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: |
+        Spinet writes a log every time it runs. Reproduce the problem, then open Settings > Updates and help > Open log folder, and attach spinet.log.
+        Installed: `C:\Users\<you>\.spinet\spinet.log`
+        Portable: `data\spinet.log` in your Spinet folder
+        Server addresses, links, IP addresses and your user name are left out of it automatically.
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots, how often it happens, or anything you've already tried.
