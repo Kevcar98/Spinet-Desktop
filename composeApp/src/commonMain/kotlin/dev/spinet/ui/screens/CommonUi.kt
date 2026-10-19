@@ -176,6 +176,7 @@ internal fun TrackRow(
     onMoveToFolder: (() -> Unit)? = null,
     onPickVersion: (() -> Unit)? = null,
     removeIsUnlike: Boolean = false,
+    removeText: String? = null,
     isCurrent: Boolean = false,
     progress: Float = 0f,
 
@@ -346,7 +347,7 @@ internal fun TrackRow(
                     if (onRemoveFromPlaylist != null) {
                         DropdownMenuItem(
                             leadingIcon = { Icon(Icons.Filled.RemoveCircleOutline, null) },
-                            text = { Text(if (removeIsUnlike) "Unlike" else "Remove from playlist") },
+                            text = { Text(removeText ?: if (removeIsUnlike) "Unlike" else "Remove from playlist") },
                             onClick = { menuOpen = false; onRemoveFromPlaylist() }
                         )
                     }

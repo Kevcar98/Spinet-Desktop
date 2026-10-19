@@ -200,7 +200,7 @@ data class AppUiState(
 }
 
 @kotlinx.serialization.Serializable
-data class PlayStat(val count: Int, val track: Track)
+data class PlayStat(val count: Int, val track: Track, val resetAt: Long = 0)
 
 private fun List<Track>.distinctById(): List<Track> {
     val seen = HashSet<String>()
@@ -222,7 +222,10 @@ private fun collapseStats(stats: MutableMap<String, PlayStat>): MutableMap<Strin
             out[key] = stat
         } else {
             val existing = out.getValue(kept)
-            out[kept] = existing.copy(count = existing.count + stat.count)
+            out[kept] = existing.copy(
+                count = existing.count + stat.count,
+                resetAt = maxOf(existing.resetAt, stat.resetAt)
+            )
         }
     }
     return out
@@ -1181,7 +1184,7 @@ class MainViewModel(
         val current = _uiState.value.currentTrack
         if (current != null && current.matchKey() == key) return
         val prev = playStats[key]
-        playStats[key] = PlayStat((prev?.count ?: 0) + 1, track)
+        playStats[key] = PlayStat((prev?.count ?: 0) + 1, track, prev?.resetAt ?: 0)
         runCatching { settingsRepository.playStatsJson = statsJson.encodeToString(playStats) }
         publishMostPlayed()
     }
@@ -1199,6 +1202,7 @@ class MainViewModel(
     private fun publishMostPlayed() {
         val seen = HashSet<String>()
         val top = playStats.values
+            .filter { it.count > 0 }
             .sortedByDescending { it.count }
             .filter { it.track.id.isBlank() || seen.add(it.track.id) }
             .take(50)
@@ -1208,6 +1212,23 @@ class MainViewModel(
             mostPlayed = top.map { fillArt(it.track, known) },
             playCounts = playStats.mapValues { (_, v) -> v.count }
         )
+    }
+
+    fun onRemoveFromMostPlayed(tracks: List<Track>) {
+        val keys = tracks.map { it.matchKey() }.toSet()
+        val ids = tracks.map { it.id }.filter { it.isNotBlank() }.toSet()
+        val now = nowEpochMillis()
+        var changed = false
+        for ((key, stat) in playStats.entries.toList()) {
+            if (key in keys || stat.track.id in ids) {
+                playStats[key] = stat.copy(count = 0, resetAt = now)
+                changed = true
+            }
+        }
+        if (!changed) return
+        runCatching { settingsRepository.playStatsJson = statsJson.encodeToString(playStats) }
+        publishMostPlayed()
+        autoPushSync()
     }
 
     private var sleepJob: Job? = null
@@ -2308,7 +2329,9 @@ class MainViewModel(
                 statsJson.decodeFromString<MutableMap<String, PlayStat>>(remote.playStatsJson)
             }.getOrNull()?.forEach { (key, stat) ->
                 val cur = playStats[key]
-                if (cur == null || stat.count > cur.count) {
+                if (cur == null || stat.resetAt > cur.resetAt ||
+                    (stat.resetAt == cur.resetAt && stat.count > cur.count)
+                ) {
                     playStats[key] = stat.copy(
                         track = stat.track.copy(
                             thumbnailUrl = portableArt(stat.track.thumbnailUrl)

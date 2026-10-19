@@ -552,7 +552,12 @@ fun App(
                                         shuffle = state.shuffle,
                                         onToggleShuffle = viewModel::onToggleShuffle,
                                         onToggleFavorite = viewModel::onToggleFavorite,
-                                        onRemove = null,
+                                        onRemove = { viewModel.onRemoveFromMostPlayed(listOf(it)) },
+                                        removeText = "Remove from Most Played",
+                                        onRemoveSelection = { chosen ->
+                                            viewModel.onRemoveFromMostPlayed(chosen)
+                                            viewModel.onClearSelection()
+                                        },
                                         onDelete = null,
                                         serverTargets = browsableSources,
                                         onSaveTrackToDevice = { track -> viewModel.onDownloadClicked(track) },
