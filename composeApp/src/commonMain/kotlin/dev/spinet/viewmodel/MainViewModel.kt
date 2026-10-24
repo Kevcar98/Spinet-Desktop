@@ -1975,7 +1975,8 @@ class MainViewModel(
         _uiState.value = _uiState.value.copy(versionOptions = emptyList(), versionLoading = true)
         versionSearchJob = viewModelScope.launch {
             val results = try {
-                repository.search(wanted)
+                repository.search(wanted, musicOnly = false)
+                    .filter { it.itemId != track.itemId }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
