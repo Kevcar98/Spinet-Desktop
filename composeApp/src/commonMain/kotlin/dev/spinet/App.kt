@@ -165,6 +165,7 @@ fun App(
     }
 
     val state by viewModel.uiState.collectAsState()
+    val canFindVersions = state.sources.any { it.kind == SourceKind.EXTENSION && it.enabled }
     val extensionRepositories = remember {
         dev.spinet.extensions.extensionPlatform?.let {
             dev.spinet.extensions.ExtensionRepositories(
@@ -420,7 +421,7 @@ fun App(
                                         onClearSelection = viewModel::onClearSelection,
                                         onSelectAll = viewModel::onSelectAll,
                                         onAddSelectionToPlaylist = { addSelection = true },
-                                        onPickVersion = { track -> viewModel.onPickVersion(track) },
+                                        onPickVersion = if (canFindVersions) { track -> viewModel.onPickVersion(track) } else null,
                                         onRefresh = { viewModel.onRefreshBrowse() },
                                         onMove = { from, to -> viewModel.onMoveBrowseTrack(from, to) },
                                         currentTrackKey = nowKey,
@@ -571,7 +572,7 @@ fun App(
                                         onClearSelection = viewModel::onClearSelection,
                                         onSelectAll = viewModel::onSelectAll,
                                         onAddSelectionToPlaylist = { addSelection = true },
-                                        onPickVersion = { track -> viewModel.onPickVersion(track) },
+                                        onPickVersion = if (canFindVersions) { track -> viewModel.onPickVersion(track) } else null,
                                         onRefresh = { viewModel.onRefreshTracksMetadata(state.mostPlayed) },
                                         onRefreshAll = { viewModel.onRefreshTracksMetadata(state.mostPlayed, force = true) },
                                         currentTrackKey = nowKey,
@@ -620,7 +621,7 @@ fun App(
                                         onClearSelection = viewModel::onClearSelection,
                                         onSelectAll = viewModel::onSelectAll,
                                         onAddSelectionToPlaylist = { addSelection = true },
-                                        onPickVersion = { track -> viewModel.onPickVersion(track) },
+                                        onPickVersion = if (canFindVersions) { track -> viewModel.onPickVersion(track) } else null,
                                         onRefresh = { viewModel.onRefreshTracksMetadata(state.favorites) },
                                         onRefreshAll = { viewModel.onRefreshTracksMetadata(state.favorites, force = true) },
                                         currentTrackKey = nowKey,
@@ -677,7 +678,7 @@ fun App(
                                                 onClearSelection = viewModel::onClearSelection,
                                                 onSelectAll = viewModel::onSelectAll,
                                                 onAddSelectionToPlaylist = { addSelection = true },
-                                        onPickVersion = { track -> viewModel.onPickVersion(track) },
+                                        onPickVersion = if (canFindVersions) { track -> viewModel.onPickVersion(track) } else null,
                                                 onRefresh = { viewModel.onRefreshTracksMetadata(playlist.tracks) },
                                                 onRefreshAll = { viewModel.onRefreshTracksMetadata(playlist.tracks, force = true) },
                                                 currentTrackKey = nowKey,
@@ -956,6 +957,7 @@ fun App(
                 onPick = { chosen -> viewModel.onChooseVersion(chosen) },
                 onUseLink = { url -> viewModel.onChooseVersionFromLink(url) },
                 onPreviewLink = { url -> viewModel.onPreviewVersionFromLink(url) },
+                onSearch = { q -> viewModel.onSearchVersions(q) },
                 onDismiss = viewModel::onDismissVersionPicker
             )
         }
@@ -978,10 +980,16 @@ private fun VersionPickerDialog(
     onUseLink: (String) -> Unit,
 
     onPreviewLink: (String) -> Unit,
+    onSearch: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var linkText by androidx.compose.runtime.remember {
         androidx.compose.runtime.mutableStateOf("")
+    }
+    var searchText by androidx.compose.runtime.remember(original.id) {
+        androidx.compose.runtime.mutableStateOf(
+            listOf(original.artist, original.title).filter { it.isNotBlank() }.joinToString(" ")
+        )
     }
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
@@ -1003,6 +1011,26 @@ private fun VersionPickerDialog(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    androidx.compose.material3.OutlinedTextField(
+                        value = searchText,
+                        onValueChange = { searchText = it },
+                        singleLine = true,
+                        label = { Text("Search") },
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                            imeAction = androidx.compose.ui.text.input.ImeAction.Search
+                        ),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(
+                            onSearch = { onSearch(searchText) }
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+                    androidx.compose.material3.TextButton(
+                        onClick = { onSearch(searchText) },
+                        enabled = searchText.isNotBlank() && !loading
+                    ) { Text("Search") }
+                }
+                Spacer(Modifier.height(8.dp))
                 when {
                     loading -> Row(verticalAlignment = Alignment.CenterVertically) {
                         androidx.compose.material3.CircularProgressIndicator(
@@ -1010,7 +1038,7 @@ private fun VersionPickerDialog(
                         )
                         Text("  Finding versions…")
                     }
-                    options.isEmpty() -> Text("No other versions found.")
+                    options.isEmpty() -> Text("Nothing found. Try different words above.")
                     else -> androidx.compose.foundation.lazy.LazyColumn(
                         modifier = Modifier.heightIn(max = 360.dp)
                     ) {
