@@ -113,6 +113,10 @@ class SettingsRepository(private val settings: Settings = createAppSettings()) {
         get() = settings.getBoolean(KEY_LOCAL_FOLDER_PROMPTED, false)
         set(value) = settings.putBoolean(KEY_LOCAL_FOLDER_PROMPTED, value)
 
+    var removedServerUrlsCsv: String
+        get() = settings.getString(KEY_REMOVED_SERVERS, "")
+        set(value) = settings.putString(KEY_REMOVED_SERVERS, value)
+
     var settingsOrderCsv: String
         get() = settings.getString(KEY_SETTINGS_ORDER, "")
         set(value) = settings.putString(KEY_SETTINGS_ORDER, value)
@@ -178,6 +182,7 @@ class SettingsRepository(private val settings: Settings = createAppSettings()) {
         const val KEY_REMEMBER_SERVER_PASSWORDS = "remember_server_passwords"
         const val KEY_LOCAL_FOLDER_PROMPTED = "local_folder_prompted"
         const val KEY_SETTINGS_ORDER = "settings_order"
+        const val KEY_REMOVED_SERVERS = "removed_servers"
         const val KEY_SETTINGS_LOCKED = "settings_locked"
         const val KEY_HIGH_QUALITY_ART = "high_quality_art"
         const val KEY_SEARCH_HISTORY = "search_history"
