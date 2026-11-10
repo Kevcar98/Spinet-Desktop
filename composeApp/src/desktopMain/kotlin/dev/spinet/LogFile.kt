@@ -20,7 +20,7 @@ private class Tee(private val screen: OutputStream, private val file: OutputStre
     private val line = java.io.ByteArrayOutputStream()
 
     override fun write(b: Int) {
-        screen.write(b)
+        runCatching { screen.write(b) }
         synchronized(line) {
             line.write(b)
             if (b == 10) writeLine()
@@ -28,7 +28,7 @@ private class Tee(private val screen: OutputStream, private val file: OutputStre
     }
 
     override fun write(b: ByteArray, off: Int, len: Int) {
-        screen.write(b, off, len)
+        runCatching { screen.write(b, off, len) }
         synchronized(line) {
             for (i in off until off + len) {
                 line.write(b[i].toInt())
@@ -38,7 +38,7 @@ private class Tee(private val screen: OutputStream, private val file: OutputStre
     }
 
     override fun flush() {
-        screen.flush()
+        runCatching { screen.flush() }
         runCatching { file.flush() }
     }
 

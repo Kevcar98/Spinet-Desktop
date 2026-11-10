@@ -34,14 +34,14 @@ actual fun rememberJsonSaver(): (suggestedName: String, content: String) -> Unit
 }
 
 @Composable
-actual fun OpenCsvFileButton(label: String, onFileRead: (String) -> Unit) {
+actual fun OpenCsvFileButton(label: String, onFileRead: (name: String, text: String) -> Unit) {
     val scope = rememberCoroutineScope()
     OutlinedButton(onClick = {
         scope.launch {
-            val text = withContext(Dispatchers.IO) {
-                DesktopFilePickers.chooseOpen("csv")?.readText()
+            val file = withContext(Dispatchers.IO) {
+                DesktopFilePickers.chooseOpen("csv")?.let { it.nameWithoutExtension to it.readText() }
             }
-            if (text != null) onFileRead(text)
+            if (file != null) onFileRead(file.first, file.second)
         }
     }) { Text(label) }
 }
@@ -55,6 +55,22 @@ actual fun rememberJsonOpener(onFileRead: (String) -> Unit): () -> Unit {
                 DesktopFilePickers.chooseOpen("json")?.readText()
             }
             if (text != null) onFileRead(text)
+        }
+    }
+}
+
+@Composable
+actual fun rememberImagePicker(onPicked: (path: String) -> Unit): () -> Unit {
+    val scope = rememberCoroutineScope()
+    return {
+        scope.launch {
+            val copy = withContext(Dispatchers.IO) {
+                val picked = DesktopFilePickers.chooseImage() ?: return@withContext null
+                val dir = java.io.File(dev.spinet.settings.appDataDir(), "playlist-art").apply { mkdirs() }
+                val target = java.io.File(dir, "${java.util.UUID.randomUUID()}.${picked.extension.lowercase()}")
+                runCatching { picked.copyTo(target) }.getOrNull()
+            }
+            if (copy != null) onPicked(copy.absolutePath)
         }
     }
 }

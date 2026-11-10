@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Fullscreen
@@ -113,6 +114,8 @@ import dev.spinet.ui.screens.LocalMusicScreen
 import dev.spinet.ui.screens.MoveToFolderDialog
 import dev.spinet.ui.screens.PlaylistDetailScreen
 import dev.spinet.ui.screens.SearchScreen
+import dev.spinet.ui.screens.ExploreScreen
+import dev.spinet.ui.screens.PlaybackErrorBanner
 import dev.spinet.ui.screens.SettingsScreen
 import dev.spinet.ui.screens.SupportScreen
 import dev.spinet.ui.screens.TrackThumbnail
@@ -392,6 +395,26 @@ fun App(
                                 modifier = contentModifier
                             )
 
+                            Destination.Explore -> ExploreScreen(
+                                sources = remember(state.sources) { viewModel.exploreSources() },
+                                loadForYou = viewModel::forYouShelves,
+                                loadPage = viewModel::explore,
+                                foldersAsGrid = state.exploreGrid,
+                                onToggleFolderLayout = viewModel::onToggleExploreGrid,
+                                folderSettingsFor = viewModel::folderSettings,
+                                onSaveFolderSettings = viewModel::onSaveFolderSettings,
+                                serverTargets = browsableSources,
+                                onSaveToLibrary = { name, tracks, image -> viewModel.onSavePlaylistToLibrary(name, tracks, image) },
+                                onDownloadAll = { name, tracks -> viewModel.onDownloadPlaylistToDevice(tracks, name) },
+                                onUploadAll = { name, tracks, baseUrl -> viewModel.onUploadPlaylistToServer(tracks, baseUrl, name) },
+                                favoriteTrackIds = state.favoriteTrackIds,
+                                onPlay = { track, list -> viewModel.onTrackClicked(track, list) },
+                                onToggleFavorite = viewModel::onToggleFavorite,
+                                onAddToPlaylist = { addTarget = it },
+                                onPickVersion = if (canFindVersions) { track -> viewModel.onPickVersion(track) } else null,
+                                modifier = contentModifier
+                            )
+
                             Destination.Library -> {
                                 val browsing = browseSource
                                 val detail = libraryDetail
@@ -484,6 +507,7 @@ fun App(
                                         onCreatePlaylist = viewModel::onCreatePlaylist,
                                         onImportPlaylist = viewModel::onImportPlaylist,
                                         onRenamePlaylist = viewModel::onRenamePlaylist,
+                                        onSetPlaylistImage = viewModel::onSetPlaylistImage,
                                         onDeletePlaylist = viewModel::onDeletePlaylist,
                                         onMovePlaylist = viewModel::onMovePlaylist,
                                         onDownloadPlaylist = { pl ->
@@ -647,6 +671,7 @@ fun App(
                                         } else {
                                             PlaylistDetailScreen(
                                                 title = playlist.name,
+                                                imageUrl = playlist.imageUrl,
                                                 tracks = playlist.tracks,
                                                 favoriteTrackIds = state.favoriteTrackIds,
                                                 isFavoritesList = false,
@@ -714,7 +739,7 @@ fun App(
                                 playlistImportStatus = state.playlistImportStatus,
                                 playlistImportPreview = state.playlistImportPreview,
                                 onImportPlaylistLink = viewModel::onImportPlaylistLink,
-                                onImportCsvPlaylist = { csv -> viewModel.onImportCsvPlaylist(csv) },
+                                onImportCsvPlaylist = { name, csv -> viewModel.onImportCsvPlaylist(csv, name) },
                                 serverHost = state.serverHost,
                                 servers = state.servers,
                                 serverConfigStatus = state.serverConfigStatus,
@@ -766,6 +791,8 @@ fun App(
                                 onToggleLock = viewModel::onToggleSettingsLock,
                                 highQualityArt = state.highQualityArt,
                                 onHighQualityArtToggle = viewModel::onHighQualityArtToggled,
+                                keepPlaying = state.keepPlaying,
+                                onKeepPlayingToggle = viewModel::onKeepPlayingToggled,
                                 modifier = contentModifier
                             )
 
@@ -793,6 +820,9 @@ fun App(
                     }
                 }
 
+                state.playbackError?.let { message ->
+                    PlaybackErrorBanner(message = message, onDismiss = viewModel::onDismissPlaybackError)
+                }
                 TransferBar(
                     progress = state.transferProgress,
                     label = state.transferLabel?.let { base ->
@@ -842,6 +872,9 @@ fun App(
                     onCycleRepeat = viewModel::onCycleRepeat,
                     onToggleFavorite = { state.currentTrack?.let(viewModel::onToggleFavorite) },
                     onAddToPlaylist = { addTarget = state.currentTrack },
+                    onPickVersion = if (canFindVersions) {
+                        { state.currentTrack?.let(viewModel::onPickVersion) }
+                    } else null,
                     onDownload = { state.currentTrack?.let(viewModel::onDownloadClicked) },
                     onUploadToServer = { baseUrl ->
                         state.currentTrack?.let { viewModel.onUploadPlaylistToServer(listOf(it), baseUrl) }
@@ -1202,6 +1235,7 @@ internal fun DesktopPlaybackBar(
     onCycleRepeat: () -> Unit,
     onToggleFavorite: () -> Unit,
     onAddToPlaylist: () -> Unit,
+    onPickVersion: (() -> Unit)?,
     onDownload: () -> Unit,
     onUploadToServer: (String) -> Unit,
     onVolumeChange: (Float) -> Unit,
@@ -1264,6 +1298,13 @@ internal fun DesktopPlaybackBar(
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, contentDescription = null) },
                             onClick = { overflowOpen = false; onAddToPlaylist() }
                         )
+                        if (onPickVersion != null) {
+                            DropdownMenuItem(
+                                text = { Text("Other versions") },
+                                leadingIcon = { Icon(Icons.Filled.Refresh, contentDescription = null) },
+                                onClick = { overflowOpen = false; onPickVersion() }
+                            )
+                        }
 
                         if (canDownload && !alreadyOnDevice) {
                             DropdownMenuItem(

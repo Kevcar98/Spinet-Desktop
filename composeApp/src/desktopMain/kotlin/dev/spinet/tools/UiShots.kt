@@ -124,6 +124,7 @@ private fun SamplePlaybackBar() {
         onCycleRepeat = {},
         onToggleFavorite = {},
         onAddToPlaylist = {},
+        onPickVersion = null,
         onDownload = {},
         onUploadToServer = {},
         onVolumeChange = {},

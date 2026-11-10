@@ -28,6 +28,15 @@ internal object DesktopFilePickers {
         return chooser.selectedFile?.takeIf { it.isFile }
     }
 
+    fun chooseImage(): File? {
+        val chooser = JFileChooser().apply {
+            dialogTitle = "Choose a picture"
+            fileFilter = FileNameExtensionFilter("Pictures", "png", "jpg", "jpeg", "webp")
+        }
+        if (chooser.showOpenDialog(null) != JFileChooser.APPROVE_OPTION) return null
+        return chooser.selectedFile?.takeIf { it.isFile }
+    }
+
     fun chooseOpenMany(ext: String?): List<File> {
         val chooser = JFileChooser().apply {
             dialogTitle = "Open"

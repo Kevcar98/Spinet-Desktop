@@ -2,6 +2,7 @@ package dev.spinet.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -50,6 +51,7 @@ import androidx.compose.runtime.DisposableEffect
 @Composable
 fun PlaylistDetailScreen(
     title: String,
+    imageUrl: String = "",
     tracks: List<Track>,
     favoriteTrackIds: Set<String>,
     isFavoritesList: Boolean,
@@ -152,6 +154,10 @@ fun PlaylistDetailScreen(
                     Icon(Icons.Filled.Check, contentDescription = "Save name")
                 }
             } else {
+                if (imageUrl.isNotBlank()) {
+                    TrackThumbnail(imageUrl, size = 56.dp)
+                    Spacer(Modifier.width(12.dp))
+                }
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleLarge,

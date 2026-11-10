@@ -77,7 +77,7 @@ kotlin {
 }
 
 val msiUpgradeUuid = "838d2ca0-f454-4b48-b699-7013b2c9a710"
-val appVersion = "0.0.3"
+val appVersion = "0.0.4"
 
 val generateAppVersion = tasks.register("generateAppVersion") {
     val outDir = layout.buildDirectory.dir("generated/appversion")
@@ -114,6 +114,16 @@ compose.desktop {
             packageName = "Spinet"
             packageVersion = appVersion
             vendor = "Spinet"
+
+            modules(
+                "jdk.unsupported",
+                "java.net.http",
+                "java.sql",
+                "java.naming",
+                "java.management",
+                "java.scripting",
+                "jdk.zipfs"
+            )
 
             windows {
                 menu = true
