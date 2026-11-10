@@ -43,6 +43,7 @@ import dev.spinet.model.Track
 fun SearchScreen(
     query: String,
     results: List<Track>,
+    header: @Composable () -> Unit = {},
     isSearching: Boolean,
     error: String?,
     downloadStatus: String?,
@@ -136,6 +137,7 @@ fun SearchScreen(
         }
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
+            item(key = "search_header") { header() }
             items(results, key = { it.id }) { track ->
                 TrackRow(
                     track = track,

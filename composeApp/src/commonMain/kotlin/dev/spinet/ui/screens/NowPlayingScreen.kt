@@ -1,6 +1,7 @@
 package dev.spinet.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -210,7 +211,10 @@ fun NowPlayingScreen(
         Text(
             text = track.artist,
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = LocalShowArtist.current?.let { show ->
+                Modifier.clickable { show(track.artist) }
+            } ?: Modifier
         )
         Text(
             text = playback.name,
