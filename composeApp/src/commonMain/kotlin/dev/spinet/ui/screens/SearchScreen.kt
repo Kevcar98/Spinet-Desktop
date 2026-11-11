@@ -38,12 +38,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import dev.spinet.model.SourcePlugin
 import dev.spinet.model.Track
+import dev.spinet.model.matchKey
 
 @Composable
 fun SearchScreen(
     query: String,
     results: List<Track>,
     header: @Composable () -> Unit = {},
+    currentTrackKey: String? = null,
+    playingProgress: Float = 0f,
     isSearching: Boolean,
     error: String?,
     downloadStatus: String?,
@@ -139,9 +142,12 @@ fun SearchScreen(
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             item(key = "search_header") { header() }
             items(results, key = { it.id }) { track ->
+                val isCurrent = currentTrackKey != null && track.matchKey() == currentTrackKey
                 TrackRow(
                     track = track,
                     onClick = { onTrackClick(track) },
+                    isCurrent = isCurrent,
+                    progress = if (isCurrent) playingProgress else 0f,
                     subtitle = listOf(track.artist, track.durationLabel)
                         .filter { it.isNotBlank() }
                         .joinToString(" · "),

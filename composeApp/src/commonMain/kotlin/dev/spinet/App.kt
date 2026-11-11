@@ -368,6 +368,8 @@ fun App(
                             Destination.Search -> SearchScreen(
                                 query = state.searchQuery,
                                 results = state.searchResults,
+                                currentTrackKey = nowKey,
+                                playingProgress = nowProgress,
                                 header = {
                                     dev.spinet.ui.screens.PlaylistResultsRow(state.searchPlaylists) { hit ->
                                         exploreNav.openFolder(hit.source, hit.folder)
@@ -413,6 +415,8 @@ fun App(
 
                             Destination.Explore -> ExploreScreen(
                                 nav = exploreNav,
+                                currentTrackKey = nowKey,
+                                playingProgress = nowProgress,
                                 sources = remember(state.sources) { viewModel.exploreSources() },
                                 loadForYou = viewModel::forYouShelves,
                                 loadPage = viewModel::explore,
